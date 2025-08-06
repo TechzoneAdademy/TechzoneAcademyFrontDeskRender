@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Details - TechZone Academy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Poppins', sans-serif; }
+        body { background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%); min-height: 100vh; padding: 0; margin: 0; }
+        .navbar { background: rgba(255, 255, 255, 0.75) !important; backdrop-filter: blur(5px); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 0.25rem 0.5rem; min-height: 40px; }
+        .navbar-brand { font-weight: 700; color: #1e3a8a !important; font-size: 1.5rem; }
+        .navbar-logo {
+            height: 55px;
+            width: auto;
+            border-radius: 50%;
+            background: linear-gradient(145deg, 
+                rgba(255, 255, 255, 0.3), 
+                rgba(255, 255, 255, 0.2),
+                rgba(30, 58, 138, 0.08)
+            );
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            padding: 8px;
+            filter: drop-shadow(0 8px 25px rgba(30, 58, 138, 0.3)) 
+                    saturate(1.3) brightness(1.15) contrast(1.1);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 0 35px rgba(30, 58, 138, 0.2),
+                0 0 60px rgba(255, 255, 255, 0.15),
+                0 6px 20px rgba(0, 0, 0, 0.1),
+                inset 0 0 25px rgba(255, 255, 255, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .navbar-logo::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.15), 
+                transparent
+            );
+            animation: navShimmer 4s infinite;
+            z-index: 1;
+        }
+        
+        @keyframes navShimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(0deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(360deg); }
+        }
+        .navbar-logo:hover {
+            transform: scale(1.2) rotate(4deg) translateY(-5px);
+            filter: drop-shadow(0 12px 30px rgba(30, 58, 138, 0.4)) 
+                    saturate(1.4) brightness(1.25) contrast(1.15);
+            border-color: rgba(255, 255, 255, 0.7);
+            box-shadow: 
+                0 0 45px rgba(30, 58, 138, 0.3),
+                0 0 80px rgba(255, 255, 255, 0.2),
+                0 10px 30px rgba(0, 0, 0, 0.15),
+                inset 0 0 30px rgba(255, 255, 255, 0.2);
+        }
+        
+        .navbar-logo:hover::before {
+            animation-duration: 1.5s;
+        }
+        .navbar-text-logo {
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-left: 5px;
+        }
+        .container-fluid { padding: 30px; margin-top: 20px !important; }
+        .logout-btn { background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%); border: none; color: white; border-radius: 25px; padding: 8px 20px; transition: all 0.3s ease; }
+        .logout-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4); color: white; }
+        .card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; margin-bottom: 30px; }
+        .table { border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); }
+        .table thead { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; }
+        .table tbody tr { transition: all 0.3s ease; }
+        .table tbody tr:hover { background-color: rgba(59, 130, 246, 0.1); transform: scale(1.02); }
+        .form-control { border-radius: 10px; border: 2px solid #e9ecef; padding: 8px 12px; }
+        .form-control:focus { border-color: #3b82f6; box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25); }
+        .btn { border-radius: 10px; font-weight: 500; }
+        .due-fees { color: #dc3545; font-weight: bold; }
+        .paid-fees { color: #28a745; font-weight: bold; }
+        .password-badge {
+            background-color: #6c757d !important;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            user-select: all;
+            transition: all 0.3s ease;
+        }
+        .password-badge:hover {
+            background-color: #5a6268 !important;
+            transform: scale(1.05);
+        }
+        
+        /* Enhanced button styling */
+        .action-buttons {
+            display: flex;
+            gap: 0.35rem;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+        
+        .btn-sm {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            border-radius: 0.4rem;
+            font-weight: 500;
+            min-width: 60px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+            border: none;
+        }
+        
+        .btn-sm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: linear-gradient(135deg, #138496 0%, #117a8b 100%);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
+            color: #212529;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.25rem;
+                width: 100%;
+            }
+            
+            .btn-sm {
+                width: 100%;
+                min-width: auto;
+            }
+        }
+        
+        /* Custom date input styling */
+        #customDateInput, #editCustomDateInput {
+            transition: all 0.3s ease;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+        }
+        
+        #customDateInput:focus, #editCustomDateInput:focus {
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+            border-color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
+                <img src="{{ url_for('static', filename='images/techzone_logo.png') }}" alt="TechZone Academy" class="navbar-logo me-2"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <span class="navbar-fallback" style="display: none;"><i class="fas fa-graduation-cap me-2"></i>TechZone Academy</span>
+                <span class="navbar-text-logo">TechZone Academy</span>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a href="{{ url_for('student_management') }}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Management
+                </a>
+                <a href="{{ url_for('logout') }}" class="btn logout-btn">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container-fluid">
+        <h1 class="text-center mb-4" style="color: #1e3a8a; text-shadow: 2px 2px 4px #ffffff;">Student Details Management</h1>
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+        
+        <!-- Add Student Form (with OTP and username autofill) -->
+        <div class="card p-4">
+            <div class="card-header bg-success text-white">
+                <i class="fas fa-user-plus me-2"></i>Add New Student
+            </div>
+            <div class="card-body">
+                <form method="post" class="row g-3">
+                    <input type="hidden" name="action" value="add_student">
+                    <div class="col-md-6">
+                        <label for="courseInitials" class="form-label">Course Type</label>
+                        <select class="form-select" id="courseInitials" name="course_initials" required onchange="generateStudentId()">
+                            <option value="">Select Course Type</option>
+                            <option value="MDA">MDA - Morning Data Analytics</option>
+                            <option value="EDA">EDA - Evening Data Analytics</option>
+                            <option value="MDE">MDE - Morning Data Engineering</option>
+                            <option value="EDE">EDE - Evening Data Engineering</option>
+                            <option value="MDS">MDS - Morning Data Science</option>
+                            <option value="EDS">EDS - Evening Data Science</option>
+                            <option value="MPE">MPE - Morning Prompt Engineering</option>
+                            <option value="EPE">EPE - Evening Prompt Engineering</option>
+                        </select>
+                        <small class="text-muted">Student ID will be generated automatically based on course type</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="studentName" class="form-label">Student Name</label>
+                        <input type="text" class="form-control" id="studentName" name="student_name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="studentNumber" class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" id="studentNumber" name="student_number" required oninput="generateStudentId()">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="generatedStudentId" class="form-label">Generated Student ID</label>
+                        <input type="text" class="form-control" id="generatedStudentId" name="generated_student_id" readonly>
+                        <small class="text-muted">Auto-generated based on course type and phone number</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <input type="email" class="form-control" id="email" name="email" required>
+                            <button class="btn btn-outline-primary" type="button" id="sendOtpBtn">Send OTP</button>
+                        </div>
+                        <div class="mt-2" id="otpSection" style="display:none;">
+                            <input type="text" class="form-control mb-2" id="otpInput" placeholder="Enter OTP">
+                            <button class="btn btn-outline-success" type="button" id="verifyOtpBtn">Verify OTP</button>
+                            <span id="otpStatus" class="ms-2"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="username" class="form-label">Username (auto-filled from email)</label>
+                        <input type="text" class="form-control" id="username" name="username" required readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="courseName" class="form-label">Course Name</label>
+                        <input type="text" class="form-control" id="courseName" name="course_name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="batchTime" class="form-label">Batch Time</label>
+                        <select class="form-select" id="batchTime" name="batch_time" required onchange="fillBatchId()">
+                            <option value="">Select Batch</option>
+                            {% for batch in batches %}
+                                <option value="{% if batch.original_batch_name %}{{ batch.original_batch_name }}{% else %}{{ batch.batch_name }}{% endif %} ({{ batch.start_time }})-({{ batch.end_time }}) ({{ batch.batch_start_date|format_date }})" data-batch-id="{{ batch._id }}">
+                                    {% if batch.original_batch_name %}{{ batch.original_batch_name }}{% else %}{{ batch.batch_name }}{% endif %} ({{ batch.start_time }})-({{ batch.end_time }}) ({{ batch.batch_start_date|format_date }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" id="batchId" name="batch_id" />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="totalFees" class="form-label">Total Fee</label>
+                        <input type="number" step="0.01" class="form-control" id="totalFees" name="total_fees" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="feesPaid" class="form-label">Fees Paid</label>
+                        <input type="number" step="0.01" class="form-control" id="feesPaid" name="fees_paid" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="dueFees" class="form-label">Due Fees</label>
+                        <input type="number" step="0.01" class="form-control" id="dueFees" name="due_fees" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="installments" class="form-label">Number of Installments</label>
+<input type="text" class="form-control" id="installments" name="installments" placeholder="Enter number of installments or 'NAN' if fully paid" required>
+<small class="text-muted">Enter number of installments or 'NAN' if fees are fully paid</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="feesDueDate" class="form-label">Fees Due Date</label>
+                        <select class="form-select" id="feesDueDate" name="fees_due_date" required onchange="toggleCustomDateInput()">
+                            <option value="">Select Due Date</option>
+                            <option value="NAN">NAN (Fees Paid)</option>
+                            <option value="custom">Enter Custom Date</option>
+                        </select>
+                        <input type="date" class="form-control mt-2" id="customDateInput" name="custom_date" style="display: none;">
+                        <small class="text-muted">Select 'NAN' if fees are fully paid, or 'Enter Custom Date' to set a specific due date</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="feesStatus" class="form-label">Fees Status</label>
+                        <select class="form-select" id="feesStatus" name="fees_status" required>
+                            <option value="">Select Fees Status</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Unpaid">Unpaid</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="col-12 text-center">
+                        <button type="submit" class="btn btn-success" id="addStudentBtn">Add Student</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Filter Form -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <i class="fas fa-filter me-2"></i>Filter Students
+            </div>
+            <div class="card-body">
+                <form method="post" class="row g-3">
+                    <input type="hidden" name="action" value="filter_students">
+                    <div class="col-md-6">
+                        <label for="batch" class="form-label">Select Batch:</label>
+                        <select name="batch" id="batch" class="form-select">
+                            <option value="">All Batches</option>
+                            {% for batch in batches %}
+                                <option value="{% if batch.original_batch_name %}{{ batch.original_batch_name }}{% else %}{{ batch.batch_name }}{% endif %} ({{ batch.start_time }})-({{ batch.end_time }}) ({{ batch.batch_start_date|format_date }})"
+                                        {% if selected_batch == ((batch.original_batch_name if batch.original_batch_name else batch.batch_name) ~ ' (' ~ batch.start_time ~ ')-(' ~ batch.end_time ~ ') (' ~ (batch.batch_start_date|format_date) ~ ')') %}selected{% endif %}>
+                                    {% if batch.original_batch_name %}{{ batch.original_batch_name }}{% else %}{{ batch.batch_name }}{% endif %} ({{ batch.start_time }})-({{ batch.end_time }}) ({{ batch.batch_start_date|format_date }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="fee_status" class="form-label">Fee Status:</label>
+                        <select name="fee_status" id="fee_status" class="form-select">
+                            <option value="">All</option>
+                            <option value="Paid" {% if selected_status == 'Paid' %}selected{% endif %}>Paid</option>
+                            <option value="Unpaid" {% if selected_status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>Filter
+                        </button>
+                        <a href="{{ url_for('student_details') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Clear Filters
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Find Student Form -->
+        <div class="card management-card fade-in-up mb-4" style="animation-delay: 0.1s;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-search me-2"></i>Find Student</h5>
+                <form action="{{ url_for('student_details') }}" method="GET" class="row g-3 align-items-center">
+                    <div class="col-auto">
+                        <label for="student_id_search" class="visually-hidden">Student ID</label>
+                        <input type="text" class="form-control" id="student_id_search" name="search_query" placeholder="Enter Student ID..." value="{{ request.args.get('search_query', '') }}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Find</button>
+                         <a href="{{ url_for('student_details') }}" class="btn btn-secondary"><i class="fas fa-times"></i> Clear</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Students Table -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <i class="fas fa-users me-2"></i>Student Records
+                {% if selected_batch or selected_status %}
+                    <span class="badge bg-light text-dark ms-2">
+                        Filtered: 
+                        {% if selected_batch %}{{ selected_batch }}{% endif %}
+                        {% if selected_status %}{{ selected_status }}{% endif %}
+                    </span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Course Type</th>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Phone Number</th>
+                                <th>Email</th>
+                                <th>Course</th>
+                                <th>Batch Time</th>
+                                <th>Username</th>
+                                <th>Password</th>
+                                <th>Total Fee</th>
+                                <th>Fees Paid</th>
+                                <th>Due Fees</th>
+                                <th>Installments</th>
+                                <th>Due Date</th>
+                                <th>Fees Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary">{{ student.course_initials if student.course_initials else 'N/A' }}</span>
+                                </td>
+                                <td><small class="text-muted">{{ student.student_id if student.student_id else 'Auto-generated' }}</small></td>
+                                <td>{{ student.student_name }}</td>
+                                <td>{{ student.student_number }}</td>
+                                <td>{{ student.email if student.email else 'Not provided' }}</td>
+                                <td>{{ student.course_name }}</td>
+                                <td>{{ student.batch_time }}</td>
+                                <td>{{ student.username }}</td>
+                                <td>
+                                    <span class="password-badge" title="Click to select and copy password" onclick="copyToClipboard('{{ student.password }}')">
+                                        {{ student.password if student.password else 'No password set' }}
+                                    </span>
+                                </td>
+                                <td>₹{{ "%.2f"|format(student.total_fees) }}</td>
+                                <td class="paid-fees">₹{{ "%.2f"|format(student.fees_paid) }}</td>
+                                <td class="{% if student.due_fees > 0 %}due-fees{% else %}paid-fees{% endif %}">
+                                    ₹{{ "%.2f"|format(student.due_fees) }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ student.installments if student.installments else 'N/A' }}</span>
+                                </td>
+                                <td>{{ student.fees_due_date }}</td>
+                                <td>
+                                    <span class="badge {% if student.fees_status == 'Paid' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ student.fees_status if student.fees_status else 'Unpaid' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{{ url_for('print_student', student_id=student._id) }}" class="btn btn-info btn-sm" target="_blank" 
+                                           title="Print {{ student.student_name }}'s complete details" 
+                                           data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <i class="fas fa-print me-1"></i>Print
+                                        </a>
+                                        {% if student.email %}
+                                        <form method="post" class="d-inline" onsubmit="return confirm('Send email to {{ student.email }}?')">
+                                            <input type="hidden" name="action" value="send_email">
+                                            <input type="hidden" name="student_id_hidden" value="{{ student._id }}">
+                                            <button type="submit" class="btn btn-success btn-sm" 
+                                                    title="Send student details to {{ student.email }}" 
+                                                    data-bs-toggle="tooltip" data-bs-placement="top">
+                                                <i class="fas fa-envelope me-1"></i>Email
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        <button class="btn btn-warning btn-sm" onclick="editStudentSafe(this)" 
+                                               data-student-id="{{ student._id }}"
+                                               data-course-initials="{{ student.course_initials if student.course_initials else '' }}"
+                                               data-student-id-display="{{ student.student_id }}"
+                                               data-student-name="{{ student.student_name }}"
+                                               data-student-number="{{ student.student_number }}"
+                                               data-email="{{ student.email if student.email else '' }}"
+                                               data-course-name="{{ student.course_name }}"
+                                               data-batch-time="{{ student.batch_time }}"
+                                               data-username="{{ student.username }}"
+                                               data-password="{{ student.password }}"
+                                               data-total-fees="{{ student.total_fees }}"
+                                               data-fees-paid="{{ student.fees_paid }}"
+                                               data-due-fees="{{ student.due_fees }}"
+                                               data-installments="{{ student.installments if student.installments else 1 }}"
+                                               data-due-date="{{ student.fees_due_date }}"
+                                               data-fees-status="{{ student.fees_status if student.fees_status else 'Unpaid' }}">
+                                            <i class="fas fa-edit me-1"></i>Edit
+                                        </button>
+                                        <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this student?')">
+                                            <input type="hidden" name="action" value="delete_student">
+                                            <input type="hidden" name="student_id_hidden" value="{{ student._id }}">
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash me-1"></i>Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editStudentModalLabel">Edit Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" id="editStudentForm">
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="update_student">
+                        <input type="hidden" name="student_id_hidden" id="editStudentIdHidden">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="editCourseInitials" class="form-label">Course Type</label>
+                                <select class="form-select" id="editCourseInitials" name="course_initials" required>
+                                    <option value="">Select Course Type</option>
+                                    <option value="MDA">MDA - Morning Data Analytics</option>
+                                    <option value="EDA">EDA - Evening Data Analytics</option>
+                                    <option value="MDE">MDE - Morning Data Engineering</option>
+                                    <option value="EDE">EDE - Evening Data Engineering</option>
+                                    <option value="MDS">MDS - Morning Data Science</option>
+                                    <option value="EDS">EDS - Evening Data Science</option>
+                                    <option value="MPE">MPE - Morning Prompt Engineering</option>
+                                    <option value="EPE">EPE - Evening Prompt Engineering</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editStudentId" class="form-label">Student ID</label>
+                                <input type="text" class="form-control" id="editStudentId" name="student_id_display" readonly>
+                                <small class="text-muted">Student ID cannot be changed after creation</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editStudentName" class="form-label">Student Name</label>
+                                <input type="text" class="form-control" id="editStudentName" name="student_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editStudentNumber" class="form-label">Phone Number</label>
+                                <input type="text" class="form-control" id="editStudentNumber" name="student_number" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editEmail" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="editEmail" name="email" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editCourseName" class="form-label">Course Name</label>
+                                <input type="text" class="form-control" id="editCourseName" name="course_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editBatchTime" class="form-label">Batch Time</label>
+                                <select class="form-select" id="editBatchTime" name="batch_time" required>
+                                    <option value="">Select Batch</option>
+                                    {% for batch in batches %}
+                                        <option value="{% if batch.original_batch_name %}{{ batch.original_batch_name }}{% else %}{{ batch.batch_name }}{% endif %} ({{ batch.start_time }})-({{ batch.end_time }}) ({{ batch.batch_start_date|format_date }})">
+                                            {% if batch.original_batch_name %}{{ batch.original_batch_name }}{% else %}{{ batch.batch_name }}{% endif %} ({{ batch.start_time }})-({{ batch.end_time }}) ({{ batch.batch_start_date|format_date }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editTotalFees" class="form-label">Total Fee</label>
+                                <input type="number" step="0.01" class="form-control" id="editTotalFees" name="total_fees" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editFeesPaid" class="form-label">Fees Paid</label>
+                                <input type="number" step="0.01" class="form-control" id="editFeesPaid" name="fees_paid" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editDueFees" class="form-label">Due Fees</label>
+                                <input type="number" step="0.01" class="form-control" id="editDueFees" name="due_fees" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editInstallments" class="form-label">Number of Installments</label>
+<input type="text" class="form-control" id="editInstallments" name="installments" placeholder="Enter number of installments or 'NAN' if fully paid" required>
+<small class="text-muted">Enter number of installments or 'NAN' if fees are fully paid</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editFeesDueDate" class="form-label">Fees Due Date</label>
+                                <select class="form-select" id="editFeesDueDate" name="fees_due_date" required onchange="toggleEditCustomDateInput()">
+                                    <option value="">Select Due Date</option>
+                                    <option value="NAN">NAN (Fees Paid)</option>
+                                    <option value="custom">Enter Custom Date</option>
+                                </select>
+                                <input type="date" class="form-control mt-2" id="editCustomDateInput" name="custom_date" style="display: none;">
+                                <small class="text-muted">Select 'NAN' if fees are fully paid, or 'Enter Custom Date' to set a specific due date</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editFeesStatus" class="form-label">Fees Status</label>
+                                <select class="form-select" id="editFeesStatus" name="fees_status" required>
+                                    <option value="">Select Fees Status</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Unpaid">Unpaid</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="editUsername" name="username" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editPassword" class="form-label">Password</label>
+                                <input type="text" class="form-control" id="editPassword" name="password">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Student</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Fill batch_id hidden field when batch is selected
+        function fillBatchId() {
+            var batchDropdown = document.getElementById('batchTime');
+            var selectedOption = batchDropdown.options[batchDropdown.selectedIndex];
+            var batchId = selectedOption.getAttribute('data-batch-id') || '';
+            document.getElementById('batchId').value = batchId;
+        }
+        // Function to generate student ID based on course type and phone number
+        function generateStudentId() {
+            const courseInitials = document.getElementById('courseInitials').value;
+            const phoneNumber = document.getElementById('studentNumber').value;
+            const generatedIdField = document.getElementById('generatedStudentId');
+            
+            if (courseInitials && phoneNumber) {
+                const studentId = courseInitials + ' ' + phoneNumber;
+                generatedIdField.value = studentId;
+            } else {
+                generatedIdField.value = '';
+            }
+        }
+        
+        // New safe function that reads data from button attributes
+        function editStudentSafe(button) {
+            const id = button.dataset.studentId;
+            const courseInitials = button.dataset.courseInitials;
+            const studentId = button.dataset.studentIdDisplay;
+            const name = button.dataset.studentName;
+            const number = button.dataset.studentNumber;
+            const email = button.dataset.email;
+            const course = button.dataset.courseName;
+            const batchTime = button.dataset.batchTime;
+            const username = button.dataset.username;
+            const password = button.dataset.password;
+            const totalFees = button.dataset.totalFees;
+            const feesPaid = button.dataset.feesPaid;
+            const dueFees = button.dataset.dueFees;
+            const installments = button.dataset.installments;
+            const dueDate = button.dataset.dueDate;
+            const feesStatus = button.dataset.feesStatus;
+            
+            document.getElementById('editStudentIdHidden').value = id;
+            document.getElementById('editCourseInitials').value = courseInitials;
+            document.getElementById('editStudentId').value = studentId;
+            document.getElementById('editStudentName').value = name;
+            document.getElementById('editStudentNumber').value = number;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editCourseName').value = course;
+            document.getElementById('editBatchTime').value = batchTime;
+            document.getElementById('editUsername').value = username;
+            document.getElementById('editTotalFees').value = totalFees;
+            document.getElementById('editFeesPaid').value = feesPaid;
+            document.getElementById('editDueFees').value = dueFees;
+            document.getElementById('editInstallments').value = installments;
+            
+            // Handle due date - check if it's 'NAN' or a date
+            if (dueDate === 'NAN') {
+                document.getElementById('editFeesDueDate').value = 'NAN';
+            } else if (dueDate && dueDate !== '' && dueDate !== 'undefined') {
+                document.getElementById('editFeesDueDate').value = 'custom';
+                document.getElementById('editCustomDateInput').value = dueDate;
+                document.getElementById('editCustomDateInput').style.display = 'block';
+                document.getElementById('editCustomDateInput').required = true;
+            } else {
+                document.getElementById('editFeesDueDate').value = '';
+            }
+            document.getElementById('editFeesStatus').value = feesStatus;
+            document.getElementById('editPassword').value = password;
+            
+            var modal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+            modal.show();
+        }
+        
+        // Keep old function for backward compatibility (if needed elsewhere)
+        function editStudent(id, courseInitials, studentId, name, number, email, course, batchTime, username, password, totalFees, feesPaid, dueFees, installments, dueDate, feesStatus) {
+            document.getElementById('editStudentIdHidden').value = id;
+            document.getElementById('editCourseInitials').value = courseInitials;
+            document.getElementById('editStudentId').value = studentId;
+            document.getElementById('editStudentName').value = name;
+            document.getElementById('editStudentNumber').value = number;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editCourseName').value = course;
+            document.getElementById('editBatchTime').value = batchTime;
+            document.getElementById('editUsername').value = username;
+            document.getElementById('editTotalFees').value = totalFees;
+            document.getElementById('editFeesPaid').value = feesPaid;
+            document.getElementById('editDueFees').value = dueFees;
+            document.getElementById('editInstallments').value = installments;
+            // Handle due date - check if it's 'NAN' or a date
+            if (dueDate === 'NAN') {
+                document.getElementById('editFeesDueDate').value = 'NAN';
+            } else if (dueDate && dueDate !== '' && dueDate !== 'undefined') {
+                document.getElementById('editFeesDueDate').value = 'custom';
+                document.getElementById('editCustomDateInput').value = dueDate;
+                document.getElementById('editCustomDateInput').style.display = 'block';
+                document.getElementById('editCustomDateInput').required = true;
+            } else {
+                document.getElementById('editFeesDueDate').value = '';
+            }
+            document.getElementById('editFeesStatus').value = feesStatus;
+            document.getElementById('editPassword').value = password; // Pre-fill with current password
+            
+            var modal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+            modal.show();
+        }
+        
+        // Toggle custom date input for add form
+        function toggleCustomDateInput() {
+            const dueDateSelect = document.getElementById('feesDueDate');
+            const customDateInput = document.getElementById('customDateInput');
+            
+            if (dueDateSelect.value === 'custom') {
+                customDateInput.style.display = 'block';
+                customDateInput.required = true;
+            } else {
+                customDateInput.style.display = 'none';
+                customDateInput.required = false;
+                customDateInput.value = '';
+            }
+        }
+        
+        // Toggle custom date input for edit form
+        function toggleEditCustomDateInput() {
+            const editDueDateSelect = document.getElementById('editFeesDueDate');
+            const editCustomDateInput = document.getElementById('editCustomDateInput');
+            
+            if (editDueDateSelect.value === 'custom') {
+                editCustomDateInput.style.display = 'block';
+                editCustomDateInput.required = true;
+            } else {
+                editCustomDateInput.style.display = 'none';
+                editCustomDateInput.required = false;
+                editCustomDateInput.value = '';
+            }
+        }
+        
+        // Copy password to clipboard
+        function copyToClipboard(password) {
+            if (password && password !== 'No password set') {
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(password).then(function() {
+                        // Show success message
+                        const toast = document.createElement('div');
+                        toast.className = 'alert alert-success position-fixed';
+                        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; padding: 10px 20px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+                        toast.innerHTML = '<i class="fas fa-check-circle me-2"></i>Password copied to clipboard!';
+                        document.body.appendChild(toast);
+                        
+                        setTimeout(function() {
+                            toast.remove();
+                        }, 2000);
+                    });
+                } else {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = password;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    alert('Password copied to clipboard!');
+                }
+            }
+        }
+        
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+        // OTP logic
+        document.addEventListener('DOMContentLoaded', function() {
+            // Only for Add Student form
+            const emailInput = document.getElementById('email');
+            const usernameInput = document.getElementById('username');
+            const sendOtpBtn = document.getElementById('sendOtpBtn');
+            const otpSection = document.getElementById('otpSection');
+            const otpInput = document.getElementById('otpInput');
+            const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+            const otpStatus = document.getElementById('otpStatus');
+            const addStudentBtn = document.getElementById('addStudentBtn');
+            let otpVerified = false;
+
+            function validateEmail(email) {
+                // Simple regex for email validation
+                return /^[\w\.-]+@[\w\.-]+\.\w{2,}$/.test(email);
+            }
+
+            if (emailInput && usernameInput) {
+                emailInput.addEventListener('input', function() {
+                    usernameInput.value = emailInput.value;
+                });
+                usernameInput.readOnly = true;
+            }
+            if (addStudentBtn) addStudentBtn.disabled = true;
+
+            if (sendOtpBtn) sendOtpBtn.addEventListener('click', function() {
+                const email = emailInput.value;
+                if (!email) {
+                    otpStatus.textContent = 'Please enter an email address first.';
+                    otpStatus.className = 'text-danger ms-2';
+                    return;
+                }
+                if (!validateEmail(email)) {
+                    otpStatus.textContent = 'Please enter a valid email address.';
+                    otpStatus.className = 'text-danger ms-2';
+                    return;
+                }
+                sendOtpBtn.disabled = true;
+                fetch('/send-otp', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'email=' + encodeURIComponent(email),
+                    credentials: 'same-origin'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        otpSection.style.display = '';
+                        otpStatus.textContent = 'OTP sent!';
+                        otpStatus.className = 'text-success ms-2';
+                    } else {
+                        otpStatus.textContent = data.message || 'Failed to send OTP.';
+                        otpStatus.className = 'text-danger ms-2';
+                    }
+                    sendOtpBtn.disabled = false;
+                })
+                .catch(() => {
+                    otpStatus.textContent = 'Failed to send OTP.';
+                    otpStatus.className = 'text-danger ms-2';
+                    sendOtpBtn.disabled = false;
+                });
+            });
+
+            if (verifyOtpBtn) verifyOtpBtn.addEventListener('click', function() {
+                const email = emailInput.value;
+                const otp = otpInput.value;
+                if (!otp) {
+                    otpStatus.textContent = 'Enter the OTP.';
+                    otpStatus.className = 'text-danger ms-2';
+                    return;
+                }
+                verifyOtpBtn.disabled = true;
+                fetch('/verify-otp', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'email=' + encodeURIComponent(email) + '&otp=' + encodeURIComponent(otp),
+                    credentials: 'same-origin'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        otpStatus.textContent = 'OTP verified!';
+                        otpStatus.className = 'text-success ms-2';
+                        otpVerified = true;
+                        if (addStudentBtn) addStudentBtn.disabled = false;
+                        otpInput.readOnly = true;
+                        verifyOtpBtn.disabled = true;
+                        sendOtpBtn.disabled = true;
+                        emailInput.readOnly = true;
+                    } else {
+                        otpStatus.textContent = data.message || 'Invalid OTP.';
+                        otpStatus.className = 'text-danger ms-2';
+                        otpVerified = false;
+                        if (addStudentBtn) addStudentBtn.disabled = true;
+                    }
+                    verifyOtpBtn.disabled = false;
+                })
+                .catch(() => {
+                    otpStatus.textContent = 'Failed to verify OTP.';
+                    otpStatus.className = 'text-danger ms-2';
+                    verifyOtpBtn.disabled = false;
+                    otpVerified = false;
+                    if (addStudentBtn) addStudentBtn.disabled = true;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Admin Management - TechZone Academy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.25rem 0.5rem;
+            min-height: 40px;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: #1e3a8a !important;
+            font-size: 1.1rem;
+            text-decoration: none;
+        }
+
+        .navbar-text-logo {
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-left: 5px;
+        }
+        
+        .container-fluid {
+            padding: 20px;
+            margin-top: 20px !important;
+        }
+        
+        .dashboard-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            border-radius: 20px 20px 0 0 !important;
+            border: none;
+            padding: 20px;
+            font-weight: 600;
+        }
+        
+        .btn {
+            border-radius: 15px;
+            padding: 12px 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            border: none;
+        }
+        
+        .table {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .table thead {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+        }
+        
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .welcome-text {
+            color: #1e3a8a;
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+            margin-bottom: 30px;
+            margin-top: 30px;
+        }
+        
+        .welcome-text h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-text .lead {
+            font-size: 1.2rem;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+        
+        .form-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .form-section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="{{ url_for('static', filename='images/techzone_logo.png') }}" alt="TechZone Academy" class="navbar-logo me-2"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <span class="navbar-fallback" style="display: none;">TechZone Academy</span>
+                <span class="navbar-text-logo">TechZone Academy</span>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user-shield me-2"></i>Welcome, Super Admin!
+                </span>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Management Table -->
+    <div class="container-fluid">
+        <div class="text-center welcome-text">
+            <h1><i class="fas fa-user-cog me-3"></i>Admin Management</h1>
+            <p class="lead">Manage Admin Users</p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>{{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Add Admin Form -->
+        <div class="form-section" id="addAdminForm">
+            <h4><i class="fas fa-user-plus me-2"></i>Add New Admin</h4>
+            <form method="post" action="{{ url_for('admin_management') }}">
+                <input type="hidden" name="action" value="add_admin">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="usernameNew" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="usernameNew" name="username" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="passwordNew" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="passwordNew" name="password" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Add Admin
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="hideForm('addAdminForm')">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Edit Admin Form -->
+        <div class="form-section" id="editAdminForm">
+            <h4><i class="fas fa-edit me-2"></i>Edit Admin</h4>
+            <form method="post" action="{{ url_for('admin_management') }}">
+                <input type="hidden" name="action" value="update_admin">
+                <input type="hidden" name="admin_id_hidden" id="editAdminId">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="usernameEdit" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="usernameEdit" name="username" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="passwordEdit" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="passwordEdit" name="password" placeholder="Leave blank to keep current password">
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Update Admin
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="hideForm('editAdminForm')">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-header">
+                <i class="fas fa-users-cog me-2"></i>Admin Users
+            </div>
+            <div class="card-body p-4">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Password</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for admin in admins %}
+                        <tr>
+                            <td>{{ admin.username }}</td>
+                            <td>
+                                {% if admin.original_password %}
+                                    <span class="badge bg-info">{{ admin.original_password }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Hidden</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ admin.created_at or 'N/A' }}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-primary btn-sm" onclick="showEditForm('{{ admin._id }}', '{{ admin.username }}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <form method="post" action="{{ url_for('admin_management') }}" style="display: inline;">
+                                        <input type="hidden" name="action" value="delete_admin">
+                                        <input type="hidden" name="admin_id_hidden" value="{{ admin._id }}">
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this admin?');">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <button class="btn btn-primary" onclick="showAddForm()">
+                    <i class="fas fa-user-plus me-2"></i>Add New Admin
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showAddForm() {
+            hideAllForms();
+            document.getElementById('addAdminForm').classList.add('active');
+            document.getElementById('usernameNew').value = '';
+            document.getElementById('passwordNew').value = '';
+            document.getElementById('usernameNew').focus();
+        }
+        
+        function showEditForm(adminId, username) {
+            hideAllForms();
+            document.getElementById('editAdminForm').classList.add('active');
+            document.getElementById('editAdminId').value = adminId;
+            document.getElementById('usernameEdit').value = username;
+            document.getElementById('passwordEdit').value = '';
+            document.getElementById('usernameEdit').focus();
+        }
+        
+        function hideForm(formId) {
+            document.getElementById(formId).classList.remove('active');
+        }
+        
+        function hideAllForms() {
+            document.querySelectorAll('.form-section').forEach(form => {
+                form.classList.remove('active');
+            });
+        }
+        
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    if (alert.classList.contains('show')) {
+                        alert.classList.remove('show');
+                        setTimeout(() => alert.remove(), 300);
+                    }
+                });
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

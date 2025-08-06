@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TechZone Academy - Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+    
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Poppins', sans-serif;
+        }
+        
+        /* Animated Background Elements */
+        .bg-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .shape:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+        
+        .shape:nth-child(3) {
+            width: 60px;
+            height: 60px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+        
+        .shape:nth-child(4) {
+            width: 100px;
+            height: 100px;
+            top: 10%;
+            right: 30%;
+            animation-delay: 1s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        .container {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .login-box {
+            max-width: 450px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+            animation: slideIn 0.8s ease-out;
+        }
+        
+        .login-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.15);
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-title {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            font-size: 2rem;
+            position: relative;
+        }
+        
+        .login-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border-radius: 2px;
+        }
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+            animation: logoFloat 4s ease-in-out infinite;
+            position: relative;
+        }
+        
+        .logo-container::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, 
+                rgba(59, 130, 246, 0.1) 0%, 
+                rgba(30, 58, 138, 0.05) 50%, 
+                transparent 70%
+            );
+            border-radius: 50%;
+            animation: pulse 3s ease-in-out infinite;
+            z-index: 0;
+        }
+        
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .main-logo {
+            max-height: 140px;
+            width: auto;
+            border-radius: 50%;
+            background: linear-gradient(145deg, 
+                rgba(255, 255, 255, 0.25), 
+                rgba(255, 255, 255, 0.15),
+                rgba(30, 58, 138, 0.05)
+            );
+            backdrop-filter: blur(20px);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            padding: 20px;
+            filter: drop-shadow(0 15px 45px rgba(0, 0, 0, 0.3)) 
+                    saturate(1.4) brightness(1.2) contrast(1.15);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 0 60px rgba(255, 255, 255, 0.3),
+                0 0 120px rgba(59, 130, 246, 0.15),
+                0 0 180px rgba(30, 58, 138, 0.1),
+                inset 0 0 40px rgba(255, 255, 255, 0.2),
+                0 12px 40px rgba(30, 58, 138, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .main-logo::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.1), 
+                transparent
+            );
+            animation: shimmer 3s infinite;
+            z-index: 1;
+        }
+        
+        .main-logo::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, 
+                rgba(59, 130, 246, 0.1) 0%, 
+                transparent 70%
+            );
+            border-radius: 50%;
+            z-index: 2;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(0deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(360deg); }
+        }
+        
+        .main-logo:hover {
+            transform: scale(1.15) rotate(5deg) translateY(-10px);
+            filter: drop-shadow(0 25px 60px rgba(0, 0, 0, 0.4)) 
+                    saturate(1.5) brightness(1.3) contrast(1.2);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 
+                0 0 80px rgba(255, 255, 255, 0.4),
+                0 0 150px rgba(59, 130, 246, 0.25),
+                0 0 220px rgba(30, 58, 138, 0.15),
+                inset 0 0 50px rgba(255, 255, 255, 0.25),
+                0 20px 60px rgba(30, 58, 138, 0.35);
+        }
+        
+        .main-logo:hover::before {
+            animation-duration: 1s;
+        }
+        
+        .logo-icon {
+            font-size: 3rem;
+            color: #1e3a8a;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .form-floating {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .form-control {
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 15px 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .form-control:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 15px 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 12px;
+        }
+        
+        .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+            transform: translateY(-2px);
+            outline: none;
+        }
+        
+        .form-select.with-icon {
+            padding-left: 45px;
+        }
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .input-group select {
+            z-index: 10;
+            position: relative;
+        }
+        
+        #batchSelection {
+            z-index: 20;
+            position: relative;
+        }
+        
+        #batchDropdown {
+            z-index: 30;
+            position: relative;
+            cursor: pointer !important;
+            pointer-events: auto;
+        }
+        
+        #batchDropdown:hover {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #1e3a8a;
+            z-index: 10;
+        }
+        
+        .form-control.with-icon {
+            padding-left: 45px;
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-login:hover::before {
+            left: 100%;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        }
+        
+        .role-options {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .role-card {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer !important;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.7);
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            pointer-events: auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .role-card:hover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .role-card.selected {
+            border-color: #1e3a8a;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+        }
+        
+        .role-card i {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .role-card span {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            margin-bottom: 20px;
+            animation: slideDown 0.5s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .footer-text {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .login-box {
+                margin: 20px;
+                padding: 30px 25px;
+            }
+            
+            .login-title {
+                font-size: 1.8rem;
+            }
+            
+            .role-options {
+                flex-direction: column;
+            }
+            
+            .role-card {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background Shapes -->
+    <div class="bg-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="container">
+        <div class="login-box">
+            <!-- Logo/Icon -->
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='images/techzone_logo.png') }}" alt="TechZone Academy" class="main-logo"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="logo-icon" style="display: none;">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+            </div>
+            
+            <h3 class="login-title">TechZone Academy</h3>
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form action="{{ url_for('student_login') }}" method="post" method="POST" id="loginForm">
+                <!-- Role Selection -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold"><i class="fas fa-user-tag"></i> Select Your Role</label>
+                    <div class="role-options">
+                        <div class="role-card" data-role="Admin" onclick="selectRole('Admin')">
+                            <i class="fas fa-user-cog"></i><br>
+                            <span>Admin</span>
+                        </div>
+                        <div class="role-card" data-role="Super Admin" onclick="selectRole('Super Admin')">
+                            <i class="fas fa-user-tie"></i><br>
+                            <span>Super Admin</span>
+                        </div>
+                        <div class="role-card" data-role="Trainer" onclick="selectRole('Trainer')">
+                            <i class="fas fa-chalkboard-teacher"></i><br>
+                            <span>Trainer</span>
+                        </div>
+                        <div class="role-card" data-role="Student" onclick="selectRole('Student')">
+                            <i class="fas fa-user-graduate"></i><br>
+                            <span>Student</span>
+                        </div>
+                    </div>
+                    <input type="hidden" name="role" id="selectedRole" required>
+                </div>
+
+                <!-- Username Input -->
+                <div class="input-group">
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" name="username" class="form-control with-icon" placeholder="Enter your username" required>
+                </div>
+
+                <!-- Password Input -->
+                <div class="input-group">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" name="password" id="passwordInput" class="form-control with-icon" placeholder="Enter your password" required>
+                    <i class="fas fa-eye" id="togglePassword" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #667eea; z-index: 10;"></i>
+                </div>
+
+                <!-- Batch Selection for Students -->
+<div class="input-group" id="batchSelection" style="display: none;">
+  <i class="fas fa-users input-icon"></i>
+  <select name="batch_id" required class="form-select" id="batchDropdown">
+    <option value="" disabled selected>Select Your Batch</option>
+    {% for batch in batches %}
+      <option value="{{ batch._id }}">
+        {% if batch.original_batch_name %}{{ batch.original_batch_name }}{% else %}{{ batch.batch_name }}{% endif %} ({{ batch.start_time }})-({{ batch.end_time }}) ({{ batch.batch_start_date|format_date }})
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+                <!-- Login Button -->
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+                </button>
+            </form>
+            
+            <div class="footer-text">
+                <i class="fas fa-shield-alt"></i> Secure Login Portal
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Simple role selection functionality
+        function selectRole(role) {
+    // Set the hidden input value
+    document.getElementById('selectedRole').value = role;
+    // Dynamically set the form action
+    var form = document.getElementById('loginForm');
+    if (role === 'Student') {
+        form.action = "{{ url_for('student_login') }}";
+        document.getElementById('batchSelection').style.display = '';
+    } else {
+        form.action = "{{ url_for('login') }}";
+        document.getElementById('batchSelection').style.display = 'none';
+    }
+
+            console.log('Role selected:', role);
+            
+            // Remove selected class from all cards
+            const allCards = document.querySelectorAll('.role-card');
+            allCards.forEach(card => {
+                card.classList.remove('selected');
+                card.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+                card.style.color = 'black';
+                card.style.borderColor = '#e9ecef';
+            });
+            
+            // Add selected class to clicked card
+            const selectedCard = document.querySelector(`[data-role="${role}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+                selectedCard.style.backgroundColor = '#1e3a8a';
+                selectedCard.style.color = 'white';
+                selectedCard.style.borderColor = '#1e3a8a';
+            }
+            
+            // Set the hidden input value
+            document.getElementById('selectedRole').value = role;
+            
+            // Show/hide batch selection for students
+            const batchSelection = document.getElementById('batchSelection');
+            const batchDropdown = document.getElementById('batchDropdown');
+            
+            if (role === 'Student') {
+                batchSelection.style.display = 'block';
+                batchDropdown.required = true;
+            } else {
+                batchSelection.style.display = 'none';
+                batchDropdown.required = false;
+                batchDropdown.value = '';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, setting up role selection...');
+            
+            // Set up role card click handlers
+            const roleCards = document.querySelectorAll('.role-card');
+            console.log('Found role cards:', roleCards.length);
+            
+            roleCards.forEach(card => {
+                card.onclick = function() {
+                    selectRole(this.getAttribute('data-role'));
+                };
+                
+                // Also add event listener as backup
+                card.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    selectRole(this.getAttribute('data-role'));
+                });
+            });
+            
+            // Set up other form elements
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('passwordInput');
+            const form = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            // Password toggle functionality
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Toggle icon
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+            
+            // Simple form validation and submission
+            form.addEventListener('submit', function(e) {
+                const selectedRoleInput = document.getElementById('selectedRole');
+                
+                // Check if role is selected
+                if (!selectedRoleInput.value) {
+                    e.preventDefault();
+                    alert('Please select a role first!');
+                    return false;
+                }
+                
+                // Check if username and password are filled
+                const username = document.querySelector('input[name="username"]').value;
+                const password = document.querySelector('input[name="password"]').value;
+                
+                if (!username || !password) {
+                    e.preventDefault();
+                    alert('Please fill in all fields!');
+                    return false;
+                }
+                
+                // Check if batch is selected for students
+                if (selectedRoleInput.value === 'Student') {
+                    const batchName = document.querySelector('select[name="batch_name"]').value;
+                    if (!batchName) {
+                        e.preventDefault();
+                        alert('Please select your batch!');
+                        return false;
+                    }
+                }
+                
+                // Show loading state
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+                loginBtn.disabled = true;
+                
+                // Form will submit normally
+                return true;
+            });
+            
+            // Add floating effect to input fields and selects
+            const inputs = document.querySelectorAll('.form-control, .form-select');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'translateY(-2px)';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'translateY(0)';
+                });
+            });
+            
+            // Enhanced dropdown functionality
+            const batchDropdown = document.getElementById('batchDropdown');
+            if (batchDropdown) {
+                // Add click event to ensure dropdown opens
+                batchDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    this.focus();
+                });
+                
+                // Add keyboard navigation
+                batchDropdown.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
+                });
+                
+                // Ensure dropdown is clickable
+                batchDropdown.style.cursor = 'pointer';
+                batchDropdown.style.userSelect = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
