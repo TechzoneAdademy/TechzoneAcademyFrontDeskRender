@@ -374,8 +374,8 @@
                     <h5><i class="fas fa-upload me-2"></i>Upload Report / Lecture File</h5>
                     <form method="POST" enctype="multipart/form-data">
                         <div class="mb-3">
-                            <label for="batch" class="form-label">Select Batch:</label>
-                            <select name="batch" id="batch" class="form-control" required>
+                            <label for="batch_id" class="form-label">Select Batch:</label>
+                            <select name="batch_id" id="batch_id" class="form-control" required>
   <option value="">-- Select a Batch --</option>
   {% for batch in batches %}
     <option value="{{ batch._id }}">
@@ -385,8 +385,8 @@
 </select>
                         </div>
                         <div class="mb-3">
-                            <label for="trainer_file" class="form-label">Select File:</label>
-                            <input type="file" name="trainer_file" id="trainer_file" class="form-control" accept=".pdf,.docx,.xlsx,.pptx,.mp4" required>
+                            <label for="file" class="form-label">Select File:</label>
+                            <input type="file" name="file" id="file" class="form-control" accept=".pdf,.docx,.xlsx,.pptx,.mp4" required>
                         </div>
                         <button type="submit" class="btn btn-success w-100">
                             <i class="fas fa-upload me-2"></i>Upload File
@@ -431,7 +431,13 @@
                             {% for batch_id, batch_info in trainer_batch_files.items() %}
                                 <div class="mb-3">
                                     <h6 class="text-primary">
-                                        <i class="fas fa-users me-2"></i>{{ batch_info.batch_name }}
+                                        <i class="fas fa-users me-2"></i>
+                                        {%- set batch_obj = (batches | selectattr('_id', 'equalto', batch_id) | list | first) -%}
+                                        {% if batch_obj %}
+                                            {% if batch_obj.original_batch_name %}{{ batch_obj.original_batch_name }}{% else %}{{ batch_obj.batch_name }}{% endif %} ({{ batch_obj.start_time }})-({{ batch_obj.end_time }}) ({{ batch_obj.batch_start_date|format_date }})
+                                        {% else %}
+                                            {{ batch_info.batch_name }}
+                                        {% endif %}
                                     </h6>
                                     {% if batch_info.files %}
                                         <ul class="list-group">

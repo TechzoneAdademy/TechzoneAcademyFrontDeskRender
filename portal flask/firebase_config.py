@@ -20,11 +20,11 @@ class FirebaseConfig:
         """Initialize Firebase Admin SDK"""
         try:
             # Path to your service account key file
-            service_account_path = os.path.join(os.path.dirname(__file__), 'firebase-service-account.json')
+            service_account_path = os.path.join(os.path.dirname(__file__), 'techzone-academy-frontdesk-firebase-adminsdk-fbsvc-6cb2171668.json')
             
             if not os.path.exists(service_account_path):
                 print("❌ Firebase service account file not found!")
-                print(f"Please place your firebase-service-account.json file in: {service_account_path}")
+                print(f"Please place your new service account json file in: {os.path.dirname(__file__)}")
                 print("Download it from Firebase Console → Project Settings → Service accounts")
                 return
             
@@ -37,7 +37,7 @@ class FirebaseConfig:
             if not firebase_admin._apps:
                 cred = credentials.Certificate(service_account_path)
                 firebase_admin.initialize_app(cred, {
-                    'storageBucket': f'{project_id}.appspot.com'
+                    'storageBucket': 'techzone-academy-frontdesk.firebasestorage.app'
                 })
             
             # Get Firestore database
@@ -52,7 +52,7 @@ class FirebaseConfig:
             
         except Exception as e:
             print(f"Firebase initialization failed: {e}")
-            print("Please check your firebase-service-account.json file")
+            print("Please check your service account json file")
             self.firebase_available = False
     
     def get_collection(self, collection_name):

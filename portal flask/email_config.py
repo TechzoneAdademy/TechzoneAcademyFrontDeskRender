@@ -9,8 +9,8 @@
 EMAIL_CONFIG = {
     'smtp_server': 'smtp.gmail.com',
     'smtp_port': 587,
-    'email': 'baigmirza6281@gmail.com',  # Replace with your Gmail address
-    'password': 'nvtg isqz avcu cqrg'   # Replace with your Gmail App Password (not your regular password)
+    'email': 'tzacademy.hyd@gmail.com',  # Replace with your Gmail address
+    'password': 'ahgh vzeh agyw hyaz'   # Replace with your Gmail App Password (not your regular password)
 }
 
 # Example configuration (replace with your actual details):

@@ -64,11 +64,15 @@ def hash_password(password):
 def download_file(filename):
     if not session.get("logged_in"):
         return redirect(url_for("login"))
+    
+    print(f"[DEBUG] Download request for file: {filename} by user: {session.get('username')} with role: {session.get('role')}")
 
     # For student users, check if they can access this file
     if session.get("role") == "Student":
-        student_batch = session.get("student_batch")
-        if student_batch and FIREBASE_AVAILABLE and trainer_files_collection is not None:
+        student_batch_id = session.get("student_batch")  # This should be the batch _id
+        print(f"[DEBUG] Student batch ID from session: {student_batch_id}")
+        
+        if student_batch_id and FIREBASE_AVAILABLE and trainer_files_collection is not None:
             try:
                 # Check if file belongs to student's batch
                 file_record = None
@@ -76,23 +80,28 @@ def download_file(filename):
                 for doc in docs:
                     file_record = doc.to_dict()
                     break
+                
                 if file_record:
-                    batches = get_all_batches()
-                    allowed_batch_id = None
-                    for batch in batches:
-                        batch_display_name = f"{batch['batch_name']} ({batch['start_time']} - {batch['end_time']})"
-                        if batch_display_name == student_batch:
-                            allowed_batch_id = str(batch['_id'])
-                            break
-                    if not allowed_batch_id or file_record.get('batch_id') != allowed_batch_id:
+                    file_batch_id = file_record.get('batch_id')
+                    print(f"[DEBUG] File batch_id: {file_batch_id}, Student batch_id: {student_batch_id}")
+                    
+                    # Convert both to strings for comparison
+                    if str(file_batch_id) != str(student_batch_id):
+                        print(f"[DEBUG] Access denied: File batch {file_batch_id} != Student batch {student_batch_id}")
                         flash("You can only download files from your enrolled batch!", "danger")
                         return redirect(url_for("dashboard"))
+                    else:
+                        print(f"[DEBUG] Access granted: File belongs to student's batch")
+                else:
+                    print(f"[DEBUG] File record not found for filename: {filename}")
+                    flash("File not found in database!", "danger")
+                    return redirect(url_for("dashboard"))
             except Exception as e:
                 print(f"Error checking file access: {e}")
                 flash("Error checking file access!", "danger")
                 return redirect(url_for("dashboard"))
 
-    # Try to get file from Firestore (base64 field)
+    # Try to get file from Firebase Storage or Firestore
     if FIREBASE_AVAILABLE and trainer_files_collection is not None:
         try:
             file_record = None
@@ -100,27 +109,48 @@ def download_file(filename):
             for doc in docs:
                 file_record = doc.to_dict()
                 break
-            if file_record and "file_data_base64" in file_record:
-                file_data = base64.b64decode(file_record["file_data_base64"])
-                file_ext = filename.split('.')[-1].lower()
-                content_type = 'application/octet-stream'
-                if file_ext == 'pdf':
-                    content_type = 'application/pdf'
-                elif file_ext in ['jpg', 'jpeg']:
-                    content_type = 'image/jpeg'
-                elif file_ext == 'png':
-                    content_type = 'image/png'
-                elif file_ext in ['doc', 'docx']:
-                    content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                elif file_ext in ['xls', 'xlsx']:
-                    content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                elif file_ext == 'mp4':
-                    content_type = 'video/mp4'
-                response = Response(file_data, content_type=content_type)
-                response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
-                return response
+            
+            if file_record:
+                # First try to download from Firebase Storage if available
+                if file_record.get('uploaded_to_storage') and storage_bucket:
+                    try:
+                        storage_path = file_record.get('storage_path', f"trainer_uploads/{filename}")
+                        blob = storage_bucket.blob(storage_path)
+                        if blob.exists():
+                            file_data = blob.download_as_bytes()
+                            content_type = file_record.get('content_type', 'application/octet-stream')
+                            original_filename = file_record.get('original_filename', filename)
+                            response = Response(file_data, content_type=content_type)
+                            response.headers['Content-Disposition'] = f'attachment; filename="{original_filename}"'
+                            return response
+                    except Exception as storage_e:
+                        print(f"Error downloading from Firebase Storage: {storage_e}")
+                
+                # Fallback to base64 data if available
+                if file_record.get("file_data_base64"):
+                    file_data = base64.b64decode(file_record["file_data_base64"])
+                    file_ext = filename.split('.')[-1].lower()
+                    content_type = file_record.get('content_type', 'application/octet-stream')
+                    if not content_type or content_type == 'application/octet-stream':
+                        if file_ext == 'pdf':
+                            content_type = 'application/pdf'
+                        elif file_ext in ['jpg', 'jpeg']:
+                            content_type = 'image/jpeg'
+                        elif file_ext == 'png':
+                            content_type = 'image/png'
+                        elif file_ext in ['doc', 'docx']:
+                            content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                        elif file_ext in ['xls', 'xlsx']:
+                            content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                        elif file_ext == 'mp4':
+                            content_type = 'video/mp4'
+                    
+                    original_filename = file_record.get('original_filename', filename)
+                    response = Response(file_data, content_type=content_type)
+                    response.headers['Content-Disposition'] = f'attachment; filename="{original_filename}"'
+                    return response
         except Exception as e:
-            print(f"Error downloading from Firestore: {e}")
+            print(f"Error downloading from Firebase: {e}")
 
     # Fallback to file system
     file_path = os.path.join(TRAINER_UPLOADS, filename)
@@ -186,16 +216,64 @@ def get_trainer_files_by_user(username):
         return []
 
 def get_trainer_files_by_batch(batch_id):
-    """Get all trainer files for a specific batch"""
+    """Get all trainer files for a specific batch - with cleanup of orphaned records"""
     if not FIREBASE_AVAILABLE or trainer_files_collection is None:
         return []
     try:
-        docs = trainer_files_collection.where(filter=('batch_id', '==', batch_id)).stream()
+        # Convert batch_id to string to match Firestore storage format
+        batch_id_str = str(batch_id)
+        print(f"[DEBUG] Looking for files with batch_id: '{batch_id_str}'")
+        
+        docs = trainer_files_collection.where('batch_id', '==', batch_id_str).stream()
         files = []
+        orphaned_docs = []
+        
         for doc in docs:
             file_data = doc.to_dict()
             file_data['_id'] = doc.id
-            files.append(file_data)
+            filename = file_data.get('filename')
+            
+            # Check if file actually exists in Firebase Storage
+            file_exists_in_storage = False
+            if file_data.get('uploaded_to_storage') and storage_bucket:
+                try:
+                    storage_path = file_data.get('storage_path', f"trainer_uploads/{filename}")
+                    blob = storage_bucket.blob(storage_path)
+                    if blob.exists():
+                        file_exists_in_storage = True
+                    else:
+                        print(f"[DEBUG] File {filename} missing from Storage, checking for base64 backup")
+                        # If no base64 backup either, mark as orphaned
+                        if not file_data.get('file_data_base64'):
+                            print(f"[DEBUG] File {filename} has no base64 backup - marking as orphaned")
+                            orphaned_docs.append(doc)
+                            continue
+                except Exception as e:
+                    print(f"[DEBUG] Error checking storage for {filename}: {e}")
+                    # If storage check fails but has base64, keep it
+                    if not file_data.get('file_data_base64'):
+                        orphaned_docs.append(doc)
+                        continue
+            
+            # Keep files that either exist in storage OR have base64 backup
+            if file_exists_in_storage or file_data.get('file_data_base64'):
+                files.append(file_data)
+                print(f"[DEBUG] Found valid file: {filename} for batch {file_data.get('batch_id')}")
+            else:
+                print(f"[DEBUG] File {filename} has no valid source - marking as orphaned")
+                orphaned_docs.append(doc)
+        
+        # Clean up orphaned records
+        if orphaned_docs:
+            print(f"[DEBUG] Cleaning up {len(orphaned_docs)} orphaned file records")
+            for doc in orphaned_docs:
+                try:
+                    print(f"[DEBUG] Deleting orphaned record: {doc.to_dict().get('filename')}")
+                    doc.reference.delete()
+                except Exception as e:
+                    print(f"[DEBUG] Error deleting orphaned record: {e}")
+        
+        print(f"[DEBUG] Total valid files found for batch {batch_id_str}: {len(files)}")
         return files
     except Exception as e:
         print(f"Error getting trainer files by batch: {e}")
@@ -221,6 +299,116 @@ def delete_trainer_file(filename, uploaded_by):
     except Exception as e:
         print(f"Error deleting trainer file: {e}")
         return False
+
+# ---------- File Cleanup Utilities ----------
+@techzone_app.route("/admin/cleanup-files", methods=["GET", "POST"])
+def cleanup_files():
+    """Admin utility to clean up orphaned file records"""
+    if not session.get("logged_in") or session.get("role") not in ["Admin", "Super Admin"]:
+        return redirect(url_for("login"))
+    
+    if request.method == "POST":
+        cleaned_count = cleanup_orphaned_file_records()
+        if cleaned_count >= 0:
+            flash(f"Cleanup completed! Removed {cleaned_count} orphaned file records.", "success")
+        else:
+            flash("Error during cleanup process!", "danger")
+        return redirect(url_for("cleanup_files"))
+    
+    # GET request - show cleanup information
+    orphaned_files = get_orphaned_file_count()
+    return render_template("cleanup_files.html", orphaned_count=orphaned_files)
+
+def cleanup_orphaned_file_records():
+    """Clean up all orphaned file records across all collections"""
+    if not FIREBASE_AVAILABLE or trainer_files_collection is None:
+        return -1
+    
+    try:
+        print("[CLEANUP] Starting cleanup of orphaned file records...")
+        
+        docs = trainer_files_collection.stream()
+        orphaned_docs = []
+        total_checked = 0
+        
+        for doc in docs:
+            total_checked += 1
+            file_data = doc.to_dict()
+            filename = file_data.get('filename')
+            
+            # Check if file actually exists in Firebase Storage or has base64 backup
+            file_exists_in_storage = False
+            has_base64_backup = bool(file_data.get('file_data_base64'))
+            
+            if file_data.get('uploaded_to_storage') and storage_bucket:
+                try:
+                    storage_path = file_data.get('storage_path', f"trainer_uploads/{filename}")
+                    blob = storage_bucket.blob(storage_path)
+                    if blob.exists():
+                        file_exists_in_storage = True
+                    else:
+                        print(f"[CLEANUP] File {filename} missing from Storage")
+                except Exception as e:
+                    print(f"[CLEANUP] Error checking storage for {filename}: {e}")
+            
+            # Mark as orphaned if no valid source exists
+            if not file_exists_in_storage and not has_base64_backup:
+                print(f"[CLEANUP] File {filename} has no valid source - marking as orphaned")
+                orphaned_docs.append(doc)
+        
+        # Clean up orphaned records
+        cleaned_count = 0
+        if orphaned_docs:
+            print(f"[CLEANUP] Cleaning up {len(orphaned_docs)} orphaned file records")
+            for doc in orphaned_docs:
+                try:
+                    orphaned_filename = doc.to_dict().get('filename')
+                    print(f"[CLEANUP] Deleting orphaned record: {orphaned_filename}")
+                    doc.reference.delete()
+                    cleaned_count += 1
+                except Exception as e:
+                    print(f"[CLEANUP] Error deleting orphaned record: {e}")
+        
+        print(f"[CLEANUP] Cleanup completed. Checked {total_checked} files, removed {cleaned_count} orphaned records")
+        return cleaned_count
+    except Exception as e:
+        print(f"Error during cleanup: {e}")
+        return -1
+
+def get_orphaned_file_count():
+    """Get count of orphaned file records"""
+    if not FIREBASE_AVAILABLE or trainer_files_collection is None:
+        return 0
+    
+    try:
+        docs = trainer_files_collection.stream()
+        orphaned_count = 0
+        
+        for doc in docs:
+            file_data = doc.to_dict()
+            filename = file_data.get('filename')
+            
+            # Check if file actually exists in Firebase Storage or has base64 backup
+            file_exists_in_storage = False
+            has_base64_backup = bool(file_data.get('file_data_base64'))
+            
+            if file_data.get('uploaded_to_storage') and storage_bucket:
+                try:
+                    storage_path = file_data.get('storage_path', f"trainer_uploads/{filename}")
+                    blob = storage_bucket.blob(storage_path)
+                    if blob.exists():
+                        file_exists_in_storage = True
+                except Exception as e:
+                    pass  # Ignore errors during count
+            
+            # Count as orphaned if no valid source exists
+            if not file_exists_in_storage and not has_base64_backup:
+                orphaned_count += 1
+        
+        return orphaned_count
+    except Exception as e:
+        print(f"Error counting orphaned files: {e}")
+        return 0
 
 # ---------- Student Management Functions ----------
 def generate_student_id_simple(course_initials, phone_number):
@@ -1204,23 +1392,48 @@ def dashboard():
                 file = request.files['file']
                 if file.filename != '':
                     filename = secure_filename(file.filename)
+                    # Add trainer username prefix to avoid conflicts
+                    prefixed_filename = f"{trainer_name}_{filename}"
                     try:
-                        if storage:
-                            blob = storage.bucket().blob(f"trainer_files/{batch_id}/{filename}")
+                        if FIREBASE_AVAILABLE and storage_bucket is not None:
+                            # Get file data first for size calculation
+                            file.seek(0)
+                            file_data = file.read()
+                            file_size = len(file_data)
+                            
+                            # Upload to Firebase Storage
+                            file.seek(0)  # Reset file pointer for upload
+                            blob = storage_bucket.blob(f"trainer_uploads/{prefixed_filename}")
                             blob.upload_from_file(file, content_type=file.content_type)
-                            db.collection('trainer_files').add({
-                                'uploader': trainer_name,
+                            
+                            # Store file metadata in Firestore (without base64 data to avoid size limits)
+                            file_record = {
+                                'filename': prefixed_filename,
+                                'original_filename': filename,
+                                'uploaded_by': trainer_name,
                                 'batch_id': batch_id,
-                                'file_name': filename,
-                                'timestamp': firestore.SERVER_TIMESTAMP,
-                                'file_size': file.content_length or 0
-                            })
+                                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                'file_size': file_size,
+                                'content_type': file.content_type,
+                                'storage_path': f"trainer_uploads/{prefixed_filename}",
+                                'uploaded_to_storage': True
+                            }
+                            
+                            # Only store base64 for very small files (less than 500KB)
+                            if file_size < 500000:  # 500KB limit
+                                file_data_base64 = base64.b64encode(file_data).decode('utf-8')
+                                file_record['file_data_base64'] = file_data_base64
+                                file_record['has_base64_backup'] = True
+                            else:
+                                file_record['has_base64_backup'] = False
+                            
+                            trainer_files_collection.add(file_record)
                             flash("File uploaded successfully!", "success")
                         else:
-                            flash("Storage not available!", "danger")
+                            flash("Firebase Storage not available!", "danger")
                     except Exception as e:
                         print(f"Error uploading file: {e}")
-                        flash("Error uploading file!", "danger")
+                        flash(f"Error uploading file: {str(e)}", "danger")
                 else:
                     flash('No selected file', 'danger')
             else:
@@ -1230,7 +1443,7 @@ def dashboard():
         # This part handles the GET request to display the dashboard.
         trainer_batch_files = {}
         for batch in trainer_batches:
-            batch_id = batch['_id']
+            batch_id = str(batch['_id'])  # Ensure string format for consistency
             batch_name = batch.get('batch_name', 'Unknown Batch')
             files_for_batch = get_trainer_files_by_batch(batch_id)
             trainer_batch_files[batch_id] = {
@@ -1287,7 +1500,8 @@ def dashboard():
         return render_template("dashboard_admin.html", data=df, batches=batches)
 
     elif role == "Super Admin":
-        return render_template("dashboard_boss.html", data=df)
+        batches = get_all_batches()
+        return render_template("dashboard_boss.html", data=df, batches=batches)
 
     elif role == "Student":
         if request.method == "POST":
@@ -1331,8 +1545,29 @@ def dashboard():
         for msg in messages:
             if username not in msg.get('read_by', []):
                 unread_count += 1
+        
+        # Get files for student's batch - create batch_files structure like trainer dashboard
+        batch_files = {}
+        if batch_id:
+            files_for_batch = get_trainer_files_by_batch(batch_id)
+            if files_for_batch:
+                # Get batch info for display name
+                batches = get_all_batches()
+                batch_name = "Unknown Batch"
+                for batch in batches:
+                    if str(batch['_id']) == str(batch_id):
+                        if batch.get('original_batch_name'):
+                            batch_name = f"{batch.get('original_batch_name')} ({batch.get('start_time', 'Unknown')})-({batch.get('end_time', 'Unknown')}) ({batch.get('batch_start_date', 'Unknown')})"
+                        else:
+                            batch_name = f"{batch.get('batch_name', 'Unknown')} ({batch.get('start_time', 'Unknown')})-({batch.get('end_time', 'Unknown')}) ({batch.get('batch_start_date', 'Unknown')})"
+                        break
                 
-        return render_template("dashboard_student.html", username=username, files=[], batch_id=batch_id, messages=messages, unread_count=unread_count)
+                batch_files[batch_id] = {
+                    'batch_name': batch_name,
+                    'files': files_for_batch
+                }
+                
+        return render_template("dashboard_student.html", username=username, batch_files=batch_files, batch_id=batch_id, messages=messages, unread_count=unread_count)
 
 @techzone_app.route("/trainer-modules", methods=["GET", "POST"])
 def trainer_modules():
@@ -1366,6 +1601,56 @@ def trainer_modules():
     
     batches = get_all_batches()
     return render_template("trainer_modules.html", data=df, batches=batches, trainer_name=username)
+
+@techzone_app.route("/batch-summary")
+def batch_summary():
+    if not session.get("logged_in") or session.get("role") not in ["Super Admin", "Admin"]:
+        return redirect(url_for("login"))
+    
+    batches = get_all_batches()
+    students = get_all_students()
+    
+    # Calculate batch-wise summary
+    batch_summary = []
+    for batch in batches:
+        batch_id = batch['_id']
+        # Use detailed batch name formatting consistent with other templates
+        # Format the date using the same logic as the template filter
+        batch_start_date = batch.get('batch_start_date', 'Unknown')
+        if batch_start_date and batch_start_date != 'Unknown':
+            try:
+                from datetime import datetime
+                date_obj = datetime.strptime(batch_start_date, '%Y-%m-%d')
+                formatted_date = date_obj.strftime('%d-%b-%Y').upper()
+            except:
+                formatted_date = batch_start_date
+        else:
+            formatted_date = 'Unknown'
+            
+        if batch.get('original_batch_name'):
+            batch_display_name = f"{batch.get('original_batch_name')} ({batch.get('start_time', 'Unknown')})-({batch.get('end_time', 'Unknown')}) ({formatted_date})"
+        else:
+            batch_display_name = f"{batch.get('batch_name', 'Unknown')} ({batch.get('start_time', 'Unknown')})-({batch.get('end_time', 'Unknown')}) ({formatted_date})"
+        
+        # Count students in this batch
+        batch_students = [s for s in students if s.get('batch_id') == batch_id]
+        total_students = len(batch_students)
+        
+        # Count paid and unpaid students
+        paid_students = len([s for s in batch_students if s.get('fees_status') == 'Paid'])
+        unpaid_students = total_students - paid_students
+        
+        batch_summary.append({
+            'batch_name': batch_display_name,
+            'total_students': total_students,
+            'paid_students': paid_students,
+            'unpaid_students': unpaid_students
+        })
+    
+    # Sort batch summary by batch name
+    batch_summary.sort(key=lambda x: x['batch_name'])
+    
+    return render_template("batch_summary.html", batches=batches, students=students, batch_summary=batch_summary)
 
 @techzone_app.route("/student-management")
 def student_management():
@@ -1427,9 +1712,20 @@ def student_details():
             if fees_due_date == "custom":
                 fees_due_date = request.form["custom_date"]
             
+            # Handle custom course initials
+            course_initials = request.form["course_initials"]
+            if course_initials == "CUSTOM":
+                custom_course_initials = request.form.get("custom_course_initials", "").strip().upper()
+                if custom_course_initials and len(custom_course_initials) >= 2 and len(custom_course_initials) <= 4:
+                    course_initials = custom_course_initials
+                else:
+                    flash("Custom course initials must be 2-4 characters long!", "danger")
+                    # Continue with error but use default
+                    course_initials = "CUSTOM"
+            
             print("[DEBUG] Received batch_id from form:", request.form.get("batch_id"))
             student_data = {
-                "course_initials": request.form["course_initials"],
+                "course_initials": course_initials,
                 "student_name": request.form["student_name"],
                 "student_number": request.form["student_number"],
                 "email": request.form["email"],
@@ -1464,8 +1760,19 @@ def student_details():
             if fees_due_date == "custom":
                 fees_due_date = request.form["custom_date"]
             
+            # Handle custom course initials
+            course_initials = request.form["course_initials"]
+            if course_initials == "CUSTOM":
+                custom_course_initials = request.form.get("custom_course_initials", "").strip().upper()
+                if custom_course_initials and len(custom_course_initials) >= 2 and len(custom_course_initials) <= 4:
+                    course_initials = custom_course_initials
+                else:
+                    flash("Custom course initials must be 2-4 characters long!", "danger")
+                    # Continue with error but use default
+                    course_initials = "CUSTOM"
+            
             student_data = {
-                "course_initials": request.form["course_initials"],
+                "course_initials": course_initials,
                 "student_name": request.form["student_name"],
                 "student_number": request.form["student_number"],
                 "email": request.form["email"],

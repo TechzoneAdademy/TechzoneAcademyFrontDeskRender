@@ -388,7 +388,14 @@
                                 <tr>
                                     <td><span class="badge bg-primary">{{ idx + 1 }}</span></td>
                                     <td>{{ row["Trainer Name"] }}</td>
-                                    <td><span class="badge bg-info">{{ row["Batch Name"] }}</span></td>
+                                    <td><span class="badge bg-info">
+    {%- set batch_obj = (batches | selectattr('batch_name', 'equalto', row['Batch Name']) | list | first) -%}
+    {% if batch_obj %}
+        {% if batch_obj.original_batch_name %}{{ batch_obj.original_batch_name }}{% else %}{{ batch_obj.batch_name }}{% endif %} ({{ batch_obj.start_time }})-({{ batch_obj.end_time }}) ({{ batch_obj.batch_start_date|format_date }})
+    {% else %}
+        {{ row['Batch Name'] }}
+    {% endif %}
+</span></td>
                                     <td>
                                         <span class="badge bg-primary">
                                             <i class="fas fa-play-circle me-1"></i>{{ row["Ongoing Module Name"] }}
@@ -461,7 +468,9 @@
                                 <select name="batch" id="editBatch" class="form-control" required>
                                     <option value="">-- Select a Batch --</option>
                                     {% for batch in batches %}
-                                        <option value="{{ batch.batch_name }}">{{ batch.batch_name }}</option>
+                                        <option value="{{ batch.batch_name }}">
+                                            {% if batch.original_batch_name %}{{ batch.original_batch_name }}{% else %}{{ batch.batch_name }}{% endif %} ({{ batch.start_time }})-({{ batch.end_time }}) ({{ batch.batch_start_date|format_date }})
+                                        </option>
                                     {% endfor %}
                                 </select>
                             </div>

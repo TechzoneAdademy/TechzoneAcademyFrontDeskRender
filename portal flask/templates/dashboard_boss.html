@@ -267,6 +267,29 @@
         .progress-bar {
             background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
         }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            border: none;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: linear-gradient(135deg, #138496 0%, #117a8b 100%);
+            color: white;
+        }
+        
+        .btn-outline-primary {
+            color: #1e3a8a;
+            border: 2px solid #1e3a8a;
+            background: transparent;
+        }
+        
+        .btn-outline-primary:hover {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border-color: #3b82f6;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -283,9 +306,14 @@
                 <span class="navbar-text me-3">
                     <i class="fas fa-user-shield me-2"></i>Welcome, Super Admin!
                 </span>
-                <a href="{{ url_for('admin_management') }}" class="btn btn-outline-primary me-2">
-                    <i class="fas fa-user-cog me-2"></i>Admin Management
-                </a>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ url_for('batch_summary') }}" class="btn btn-info">
+                        <i class="fas fa-layer-group me-2"></i>Batch-wise Summary
+                    </a>
+                    <a href="{{ url_for('admin_management') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-user-cog me-2"></i>Admin Management
+                    </a>
+                </div>
                 <a href="{{ url_for('logout') }}" class="btn logout-btn">
                     <i class="fas fa-sign-out-alt me-2"></i>Logout
                 </a>
@@ -410,7 +438,14 @@
                                         {{ row["Trainer Name"] }}
                                     </td>
                                     <td>
-                                        <span class="badge bg-info">{{ row["Batch Name"] }}</span>
+                                        <span class="badge bg-info">
+    {%- set batch_obj = (batches | selectattr('batch_name', 'equalto', row['Batch Name']) | list | first) -%}
+    {% if batch_obj %}
+        {% if batch_obj.original_batch_name %}{{ batch_obj.original_batch_name }}{% else %}{{ batch_obj.batch_name }}{% endif %} ({{ batch_obj.start_time }})-({{ batch_obj.end_time }}) ({{ batch_obj.batch_start_date|format_date }})
+    {% else %}
+        {{ row['Batch Name'] }}
+    {% endif %}
+</span>
                                     </td>
                                     <td>
                                         <span class="badge bg-primary">

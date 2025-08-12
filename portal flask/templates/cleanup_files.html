@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Cleanup Utility - TechZone Academy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .container {
+            padding-top: 50px;
+            padding-bottom: 50px;
+        }
+        
+        .cleanup-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            padding: 40px;
+            margin: 20px 0;
+        }
+        
+        .header-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .cleanup-title {
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+            border-left: 4px solid #e53e3e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .cleanup-btn {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .cleanup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(229, 62, 62, 0.3);
+            color: white;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(74, 85, 104, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('dashboard') }}" class="back-btn">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+        
+        <div class="cleanup-card text-center">
+            <i class="fas fa-broom header-icon"></i>
+            <h1 class="cleanup-title">File Cleanup Utility</h1>
+            
+            <div class="info-box text-start">
+                <h5><i class="fas fa-info-circle me-2"></i>What does this do?</h5>
+                <p class="mb-0">This utility removes orphaned file records from the database. Orphaned records are metadata entries for files that no longer exist in Firebase Storage and don't have base64 backups.</p>
+            </div>
+            
+            {% if orphaned_count > 0 %}
+            <div class="warning-box text-start">
+                <h5><i class="fas fa-exclamation-triangle me-2"></i>Files Found</h5>
+                <p class="mb-0">Found <strong>{{ orphaned_count }}</strong> orphaned file records that can be safely removed from the database.</p>
+            </div>
+            
+            <form method="POST" class="mt-4">
+                <button type="submit" class="cleanup-btn">
+                    <i class="fas fa-trash-alt me-2"></i>
+                    Clean Up {{ orphaned_count }} Orphaned Records
+                </button>
+            </form>
+            {% else %}
+            <div class="info-box text-start">
+                <h5><i class="fas fa-check-circle me-2" style="color: #38a169;"></i>All Clean!</h5>
+                <p class="mb-0">No orphaned file records found. Your database is clean and up to date.</p>
+            </div>
+            {% endif %}
+            
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <div class="text-center">
+                        <i class="fas fa-database" style="font-size: 2rem; color: #667eea; margin-bottom: 10px;"></i>
+                        <h6>Safe Operation</h6>
+                        <p class="small text-muted">Only removes invalid database records, never touches actual files</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-center">
+                        <i class="fas fa-shield-alt" style="font-size: 2rem; color: #667eea; margin-bottom: 10px;"></i>
+                        <h6>Admin Only</h6>
+                        <p class="small text-muted">This utility is restricted to administrators for security</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="position-fixed" style="top: 20px; right: 20px; z-index: 9999;">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

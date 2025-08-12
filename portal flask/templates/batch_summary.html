@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Batch-wise Summary - TechZone Academy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #232526 0%, #414345 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.25rem 0.5rem;
+            min-height: 40px;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: #1e3a8a !important;
+            font-size: 1.5rem;
+            text-decoration: none;
+        }
+        
+        .navbar-logo {
+            height: 55px;
+            width: auto;
+            border-radius: 50%;
+            background: linear-gradient(145deg, 
+                rgba(255, 255, 255, 0.3), 
+                rgba(255, 255, 255, 0.2),
+                rgba(30, 58, 138, 0.08)
+            );
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            padding: 8px;
+            filter: drop-shadow(0 8px 25px rgba(30, 58, 138, 0.3)) 
+                    saturate(1.3) brightness(1.15) contrast(1.1);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 0 35px rgba(30, 58, 138, 0.2),
+                0 0 60px rgba(255, 255, 255, 0.15),
+                0 6px 20px rgba(0, 0, 0, 0.1),
+                inset 0 0 25px rgba(255, 255, 255, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .navbar-logo::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.15), 
+                transparent
+            );
+            animation: navShimmer 4s infinite;
+            z-index: 1;
+        }
+        
+        @keyframes navShimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(0deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(360deg); }
+        }
+        
+        .navbar-logo:hover {
+            transform: scale(1.2) rotate(4deg) translateY(-5px);
+            filter: drop-shadow(0 12px 30px rgba(30, 58, 138, 0.4)) 
+                    saturate(1.4) brightness(1.25) contrast(1.15);
+            border-color: rgba(255, 255, 255, 0.7);
+            box-shadow: 
+                0 0 45px rgba(30, 58, 138, 0.3),
+                0 0 80px rgba(255, 255, 255, 0.2),
+                0 10px 30px rgba(0, 0, 0, 0.15),
+                inset 0 0 30px rgba(255, 255, 255, 0.2);
+        }
+        
+        .navbar-logo:hover::before {
+            animation-duration: 1.5s;
+        }
+        
+        .navbar-text-logo {
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-left: 5px;
+        }
+        
+        .container-fluid {
+            padding: 20px;
+            margin-top: 20px !important;
+        }
+        
+        .summary-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            padding: 30px;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn {
+            border-radius: 15px;
+            padding: 12px 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border: none;
+        }
+        
+        .btn-outline-primary {
+            color: #1e3a8a;
+            border: 2px solid #1e3a8a;
+            background: transparent;
+        }
+        
+        .btn-outline-primary:hover {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border-color: #3b82f6;
+            color: white;
+        }
+        
+        .welcome-text {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+            margin-top: 30px;
+        }
+        
+        .welcome-text h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-text .lead {
+            font-size: 1.2rem;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+        
+        .table {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            background: white;
+        }
+        
+        .table thead {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+        }
+        
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .table th, .table td {
+            padding: 15px;
+            vertical-align: middle;
+        }
+        
+        .badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.5rem;
+        }
+        
+        .logout-btn {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            border: none;
+            color: white;
+            border-radius: 25px;
+            padding: 8px 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+            color: white;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        .stats-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
+                <img src="{{ url_for('static', filename='images/techzone_logo.png') }}" alt="TechZone Academy" class="navbar-logo me-2"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <span class="navbar-fallback" style="display: none;"><i class="fas fa-graduation-cap me-2"></i>TechZone Academy</span>
+                <span class="navbar-text-logo">TechZone Academy</span>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-layer-group me-2"></i>Batch-wise Summary
+                </span>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+                <a href="{{ url_for('logout') }}" class="btn logout-btn">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="text-center welcome-text fade-in-up">
+            <h1><i class="fas fa-layer-group me-3"></i>Batch-wise Summary</h1>
+            <p class="lead">Comprehensive Overview of Student Distribution Across Batches</p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show fade-in-up" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>{{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card fade-in-up">
+                    <div class="stats-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h3>{{ batches|length }}</h3>
+                    <p class="text-muted">Total Batches</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card fade-in-up" style="animation-delay: 0.1s;">
+                    <div class="stats-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h3>{{ students|length }}</h3>
+                    <p class="text-muted">Total Students</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card fade-in-up" style="animation-delay: 0.2s;">
+                    <div class="stats-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>{{ students|selectattr('fees_status', 'equalto', 'Paid')|list|length }}</h3>
+                    <p class="text-muted">Paid Students</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card fade-in-up" style="animation-delay: 0.3s;">
+                    <div class="stats-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3>{{ students|rejectattr('fees_status', 'equalto', 'Paid')|list|length }}</h3>
+                    <p class="text-muted">Unpaid Students</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch-wise Summary Table -->
+        <div class="summary-card fade-in-up" style="animation-delay: 0.4s;">
+            <h4><i class="fas fa-table me-2"></i>Detailed Batch Summary</h4>
+            <div class="table-responsive mt-3">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col"><i class="fas fa-users me-2"></i>Batch Name</th>
+                            <th scope="col" class="text-center"><i class="fas fa-user-graduate me-2"></i>Total Students</th>
+                            <th scope="col" class="text-center"><i class="fas fa-check-circle me-2 text-success"></i>Paid Students</th>
+                            <th scope="col" class="text-center"><i class="fas fa-exclamation-circle me-2 text-warning"></i>Unpaid Students</th>
+                            <th scope="col" class="text-center"><i class="fas fa-percentage me-2"></i>Payment Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if batch_summary %}
+                            {% for batch in batch_summary %}
+                                <tr>
+                                    <td class="fw-medium">{{ batch.batch_name }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary rounded-pill">{{ batch.total_students }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success rounded-pill">{{ batch.paid_students }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-warning rounded-pill">{{ batch.unpaid_students }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if batch.total_students > 0 %}
+                                            {% set payment_rate = ((batch.paid_students / batch.total_students) * 100) | round(1) %}
+                                            {% if payment_rate >= 80 %}
+                                                <span class="badge bg-success rounded-pill">{{ payment_rate }}%</span>
+                                            {% elif payment_rate >= 50 %}
+                                                <span class="badge bg-warning rounded-pill">{{ payment_rate }}%</span>
+                                            {% else %}
+                                                <span class="badge bg-danger rounded-pill">{{ payment_rate }}%</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary rounded-pill">0%</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="fas fa-info-circle me-2"></i>No batches found
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Summary Footer -->
+        <div class="summary-card fade-in-up" style="animation-delay: 0.5s;">
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <h5><i class="fas fa-calculator me-2 text-primary"></i>Overall Statistics</h5>
+                    <p class="mb-1"><strong>Total Revenue Potential:</strong> ₹{{ students|map(attribute='total_fees')|sum|round(2) }}</p>
+                    <p class="mb-1"><strong>Revenue Collected:</strong> ₹{{ students|map(attribute='fees_paid')|sum|round(2) }}</p>
+                    <p class="mb-0"><strong>Outstanding Amount:</strong> ₹{{ (students|map(attribute='total_fees')|sum - students|map(attribute='fees_paid')|sum)|round(2) }}</p>
+                </div>
+                <div class="col-md-4">
+                    <h5><i class="fas fa-chart-pie me-2 text-success"></i>Payment Overview</h5>
+                    {% set total_students = students|length %}
+                    {% set paid_students = students|selectattr('fees_status', 'equalto', 'Paid')|list|length %}
+                    {% if total_students > 0 %}
+                        {% set overall_payment_rate = ((paid_students / total_students) * 100) | round(1) %}
+                        <p class="mb-1"><strong>Overall Payment Rate:</strong> {{ overall_payment_rate }}%</p>
+                        <p class="mb-1"><strong>Students Fully Paid:</strong> {{ paid_students }} / {{ total_students }}</p>
+                        <p class="mb-0"><strong>Students Pending:</strong> {{ total_students - paid_students }}</p>
+                    {% else %}
+                        <p class="text-muted">No student data available</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <h5><i class="fas fa-trophy me-2 text-warning"></i>Top Performing Batch</h5>
+                    {% if batch_summary %}
+                        {% set top_batch = batch_summary | max(attribute='total_students') %}
+                        <p class="mb-1"><strong>Highest Enrollment:</strong></p>
+                        <p class="mb-1">{{ top_batch.batch_name[:50] }}{% if top_batch.batch_name|length > 50 %}...{% endif %}</p>
+                        <p class="mb-0"><strong>{{ top_batch.total_students }} students</strong></p>
+                    {% else %}
+                        <p class="text-muted">No batch data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

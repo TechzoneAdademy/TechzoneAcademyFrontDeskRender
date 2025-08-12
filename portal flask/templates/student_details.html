@@ -235,7 +235,7 @@
                     <input type="hidden" name="action" value="add_student">
                     <div class="col-md-6">
                         <label for="courseInitials" class="form-label">Course Type</label>
-                        <select class="form-select" id="courseInitials" name="course_initials" required onchange="generateStudentId()">
+                        <select class="form-select" id="courseInitials" name="course_initials" required onchange="generateStudentId(); toggleCustomCourseInput()">
                             <option value="">Select Course Type</option>
                             <option value="MDA">MDA - Morning Data Analytics</option>
                             <option value="EDA">EDA - Evening Data Analytics</option>
@@ -245,7 +245,12 @@
                             <option value="EDS">EDS - Evening Data Science</option>
                             <option value="MPE">MPE - Morning Prompt Engineering</option>
                             <option value="EPE">EPE - Evening Prompt Engineering</option>
+                            <option value="MAIML">MAIML - Morning AIML</option>
+                            <option value="EAIML">EAIML - Evening AIML</option>
+                            <option value="CUSTOM">Custom Course Type</option>
                         </select>
+                        <input type="text" class="form-control mt-2" id="customCourseInput" name="custom_course_initials" placeholder="Enter custom course initials (e.g., MGM)" style="display: none;" onchange="generateStudentId()">
+                        <small class="text-muted" id="customCourseHint" style="display: none;">Enter 2-4 letter course initials for your custom course type</small>
                         <small class="text-muted">Student ID will be generated automatically based on course type</small>
                     </div>
                     <div class="col-md-6">
@@ -533,7 +538,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="editCourseInitials" class="form-label">Course Type</label>
-                                <select class="form-select" id="editCourseInitials" name="course_initials" required>
+                                <select class="form-select" id="editCourseInitials" name="course_initials" required onchange="toggleEditCustomCourseInput()">
                                     <option value="">Select Course Type</option>
                                     <option value="MDA">MDA - Morning Data Analytics</option>
                                     <option value="EDA">EDA - Evening Data Analytics</option>
@@ -543,7 +548,12 @@
                                     <option value="EDS">EDS - Evening Data Science</option>
                                     <option value="MPE">MPE - Morning Prompt Engineering</option>
                                     <option value="EPE">EPE - Evening Prompt Engineering</option>
+                                    <option value="MAIML">MAIML - Morning AIML</option>
+                                    <option value="EAIML">EAIML - Evening AIML</option>
+                                    <option value="CUSTOM">Custom Course Type</option>
                                 </select>
+                                <input type="text" class="form-control mt-2" id="editCustomCourseInput" name="custom_course_initials" placeholder="Enter custom course initials" style="display: none;">
+                                <small class="text-muted" id="editCustomCourseHint" style="display: none;">Enter 2-4 letter course initials for your custom course type</small>
                             </div>
                             <div class="col-md-6">
                                 <label for="editStudentId" class="form-label">Student ID</label>
@@ -640,11 +650,59 @@
             var batchId = selectedOption.getAttribute('data-batch-id') || '';
             document.getElementById('batchId').value = batchId;
         }
+        // Function to toggle custom course input for add form
+        function toggleCustomCourseInput() {
+            const courseSelect = document.getElementById('courseInitials');
+            const customInput = document.getElementById('customCourseInput');
+            const customHint = document.getElementById('customCourseHint');
+            
+            if (courseSelect.value === 'CUSTOM') {
+                customInput.style.display = 'block';
+                customHint.style.display = 'block';
+                customInput.required = true;
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+                customHint.style.display = 'none';
+                customInput.required = false;
+                customInput.value = '';
+            }
+            generateStudentId();
+        }
+        
+        // Function to toggle custom course input for edit form
+        function toggleEditCustomCourseInput() {
+            const editCourseSelect = document.getElementById('editCourseInitials');
+            const editCustomInput = document.getElementById('editCustomCourseInput');
+            const editCustomHint = document.getElementById('editCustomCourseHint');
+            
+            if (editCourseSelect.value === 'CUSTOM') {
+                editCustomInput.style.display = 'block';
+                editCustomHint.style.display = 'block';
+                editCustomInput.required = true;
+                editCustomInput.focus();
+            } else {
+                editCustomInput.style.display = 'none';
+                editCustomHint.style.display = 'none';
+                editCustomInput.required = false;
+                editCustomInput.value = '';
+            }
+        }
+        
         // Function to generate student ID based on course type and phone number
         function generateStudentId() {
-            const courseInitials = document.getElementById('courseInitials').value;
+            const courseSelect = document.getElementById('courseInitials');
+            const customInput = document.getElementById('customCourseInput');
             const phoneNumber = document.getElementById('studentNumber').value;
             const generatedIdField = document.getElementById('generatedStudentId');
+            
+            let courseInitials = '';
+            
+            if (courseSelect.value === 'CUSTOM') {
+                courseInitials = customInput.value.toUpperCase();
+            } else {
+                courseInitials = courseSelect.value;
+            }
             
             if (courseInitials && phoneNumber) {
                 const studentId = courseInitials + ' ' + phoneNumber;
