@@ -1,1 +1,1 @@
-web: gunicorn portal\ flask.AI_firebase:techzone_app
+web: gunicorn portalflask.AI_firebase:techzone_app
