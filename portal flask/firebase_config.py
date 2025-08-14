@@ -64,7 +64,7 @@ class FirebaseConfig:
             if not firebase_admin._apps:
                 cred = credentials.Certificate(temp_json_file)
                 firebase_admin.initialize_app(cred, {
-                    'storageBucket': firebase_config.get('project_id') + '.appspot.com'
+                    'storageBucket': firebase_config.get('project_id') + '.firebasestorage.app'
                 })
 
             self.db = firestore.client()

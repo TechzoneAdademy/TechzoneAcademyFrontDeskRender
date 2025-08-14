@@ -3,4 +3,4 @@ portal flask/firebase-service-account.json
 portal flask/techzone-academy-frontdesk-firebase-adminsdk-fbsvc-6cb2171668.json
 # Ignore all JSON service accounts
 *.json
-#.env
+.env
