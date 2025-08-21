@@ -8,7 +8,7 @@ import base64
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from firebase_config import firebase_config
+from .firebase_config import firebase_config
 import random
 import re
 
@@ -1087,7 +1087,7 @@ def check_student_login(username, password, batch_id):
 
 # ---------- Email Configuration ----------
 try:
-    from email_config import EMAIL_CONFIG
+    from .email_config import EMAIL_CONFIG
 except ImportError:
     print("Warning: email_config.py not found. Using default configuration.")
     EMAIL_CONFIG = {
