@@ -12,7 +12,7 @@ EMAIL_CONFIG = {
     'smtp_server': os.environ.get('SMTP_SERVER', 'smtp.gmail.com'),
     'smtp_port': int(os.environ.get('SMTP_PORT', '587')),
     'email': os.environ.get('EMAIL_ADDRESS', 'tzacademy.hyd@gmail.com'),
-    'password': os.environ.get('EMAIL_PASSWORD', 'ahgh vzeh agyw hyaz')
+    'password': os.environ.get('EMAIL_PASSWORD', 'ahghvzehagywhyaz')
 }
 
 # Example configuration (replace with your actual details):
