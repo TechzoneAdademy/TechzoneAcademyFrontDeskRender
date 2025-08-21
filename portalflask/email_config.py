@@ -1,16 +1,18 @@
 # Email Configuration for TechZone Academy Student Management System
 
+import os
+
 # IMPORTANT: Before using the email functionality, you need to:
 # 1. Enable 2-factor authentication on your Gmail account
 # 2. Generate an App Password for this application
 # 3. Update the EMAIL_CONFIG below with your credentials
 
-# Gmail Configuration
+# Gmail Configuration - Use environment variables in production
 EMAIL_CONFIG = {
-    'smtp_server': 'smtp.gmail.com',
-    'smtp_port': 587,
-    'email': 'tzacademy.hyd@gmail.com',  # Replace with your Gmail address
-    'password': 'ahgh vzeh agyw hyaz'   # Replace with your Gmail App Password (not your regular password)
+    'smtp_server': os.environ.get('SMTP_SERVER', 'smtp.gmail.com'),
+    'smtp_port': int(os.environ.get('SMTP_PORT', '587')),
+    'email': os.environ.get('EMAIL_ADDRESS', 'tzacademy.hyd@gmail.com'),
+    'password': os.environ.get('EMAIL_PASSWORD', 'ahgh vzeh agyw hyaz')
 }
 
 # Example configuration (replace with your actual details):

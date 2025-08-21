@@ -1091,10 +1091,10 @@ try:
 except ImportError:
     print("Warning: email_config.py not found. Using default configuration.")
     EMAIL_CONFIG = {
-        'smtp_server': 'smtp.gmail.com',
-        'smtp_port': 587,
-        'email': 'your_email@gmail.com',
-        'password': 'your_app_password'
+        'smtp_server': os.environ.get('SMTP_SERVER', 'smtp.gmail.com'),
+        'smtp_port': int(os.environ.get('SMTP_PORT', '587')),
+        'email': os.environ.get('EMAIL_ADDRESS', 'your_email@gmail.com'),
+        'password': os.environ.get('EMAIL_PASSWORD', 'your_app_password')
     }
 
 def send_student_email(student_email, student_data):
