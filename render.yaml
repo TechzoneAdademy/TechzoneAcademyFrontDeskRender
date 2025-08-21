@@ -3,11 +3,13 @@ services:
     name: techzone-portal
     env: python
     plan: starter
-    buildCommand: pip install -r requirements.txt
+    buildCommand: chmod +x build.sh && ./build.sh
     startCommand: gunicorn app:techzone_app --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
+      - key: PYTHONPATH
+        value: /opt/render/project/src
       - key: SECRET_KEY
         generateValue: true
       - key: FIREBASE_CONFIG
